@@ -55,8 +55,12 @@ def download(url: str, expected_sha256: str, dest: Path) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
     if not dest.is_file():
         log.info("downloading %s", url)
-        with urllib.request.urlopen(url) as response, open(dest, "wb") as f:
+        # Mendeley answers 403 to Python's default user agent.
+        request = urllib.request.Request(url, headers={"User-Agent": "fishfry (dataset download)"})
+        partial = dest.with_suffix(".part")
+        with urllib.request.urlopen(request) as response, open(partial, "wb") as f:
             shutil.copyfileobj(response, f)
+        partial.replace(dest)  # a failed download never leaves a file that looks complete
     actual = sha256(dest)
     if actual != expected_sha256:
         raise ValueError(f"{dest} has sha256 {actual}, expected {expected_sha256}")

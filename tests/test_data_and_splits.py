@@ -99,3 +99,24 @@ def test_materialise_writes_a_yolo_dataset(index, tmp_path):
         assert len(list((tmp_path / "split" / "images" / part).glob("*.jpg"))) == len(files)
         assert len(list((tmp_path / "split" / "labels" / part).glob("*.txt"))) == len(files)
     assert isinstance(pd.read_csv(tmp_path / "ffd" / "index.csv"), pd.DataFrame)
+
+
+def test_download_sends_a_user_agent_and_checks_the_hash(tmp_path, monkeypatch):
+    import hashlib
+    import io
+
+    from fishfry import data
+
+    payload = b"fake archive"
+    seen = {}
+
+    def fake_urlopen(request):
+        seen["agent"] = request.get_header("User-agent")
+        return io.BytesIO(payload)
+
+    monkeypatch.setattr(data.urllib.request, "urlopen", fake_urlopen)
+    good = hashlib.sha256(payload).hexdigest()
+    assert data.download("https://example.org/ffd", good, tmp_path / "FFD.zip").is_file()
+    assert seen["agent"]
+    with pytest.raises(ValueError, match="sha256"):
+        data.download("https://example.org/ffd", "0" * 64, tmp_path / "FFD.zip")
