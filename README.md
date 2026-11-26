@@ -123,6 +123,32 @@ Per-run metrics are in [`results/runs.csv`](results/runs.csv), fold averages in
 [`results/by_density.json`](results/by_density.json). The full run (17 trainings) took 2.2 hours on
 two Kaggle T4 GPUs.
 
+### What the detector gets right, and where it looks
+
+`fishfry explain` takes a trained model and one frame from each of a fold's held-out sessions
+(the middle frame, not hand-picked). It shows every box checked against the annotations (green
+correct, orange false detection, red missed; dashed = dead fry; a dead fry labelled live counts
+as wrong) and an **EigenCAM** heat map of where the detector looks. Grad-CAM needs a single class
+score to differentiate, which an object detector does not have; EigenCAM (Muhammad & Yeasin,
+2020) instead takes the first principal component of the feature map the detection head reads
+for its smallest objects, so it needs no gradients.
+
+Selected model (YOLO11n, 960 px), fold 0, all four sessions unseen in training:
+
+| Session | correct | false | missed | precision | recall |
+|---|---|---|---|---|---|
+| 20 fry, white, high | 20 | 0 | 0 | 1.00 | 1.00 |
+| 40 fry, white, low | 40 | 0 | 0 | 1.00 | 1.00 |
+| 60 fry, yellow, high | 57 | 1 | 2 | 0.98 | 0.97 |
+| 80 fry, yellow, low | 79 | 4 | 1 | 0.95 | 0.99 |
+
+![80 fry, held-out session](results/explain/80_yellow_low_6dead.png)
+
+The heat map sits on the fry bodies, and the mistakes are where fry overlap: a cluster read as
+one fish too many, or two touching fry read as one. The map also lights up the suction cups
+outside the tank and the image border, which no detection uses. Figures for all four sessions are
+in [`results/explain/`](results/explain/).
+
 ## What was tried and dropped
 
 The original coursework also started a STAC-style semi-supervised teacher–student model (never
@@ -147,6 +173,7 @@ pip install -e ".[dev]"
 fishfry prepare --out data/ffd            # downloads FFD.zip from Mendeley and checks its SHA-256
 fishfry grid --data data/ffd --runs runs  # trains and evaluates every job; finished jobs are skipped
 fishfry summarize --runs runs --out results
+fishfry explain --weights runs/session_cv/yolo11n_960/fold0/train/weights/best.pt --fold 0  # per-frame figures
 ```
 
 `fishfry prepare --zip path/to/FFD.zip` uses a local copy instead. On a machine with several
@@ -163,6 +190,7 @@ src/fishfry/train.py     train one configuration, evaluate detection and countin
 src/fishfry/counting.py  live/dead counts, threshold chosen on validation, farm metrics
 src/fishfry/grid.py      resumable grid, sharded across GPUs; summary tables
 src/fishfry/plots.py     figures for this README
+src/fishfry/explain.py   correct / missed / false boxes per frame, EigenCAM heat maps
 kaggle/run.ipynb         the full run on a Kaggle GPU notebook
 results/                 run and fold tables, per-density counting, figures
 tests/                   data, split, counting and grid tests on a synthetic dataset

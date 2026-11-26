@@ -1,0 +1,30 @@
+{
+  "20_white_high_1dead_44.jpg": {
+    "fn": 0,
+    "fp": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "tp": 20
+  },
+  "40_white_low_2dead_40.jpg": {
+    "fn": 0,
+    "fp": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "tp": 40
+  },
+  "60_yellow_high_5dead_42.jpg": {
+    "fn": 2,
+    "fp": 1,
+    "precision": 0.9828,
+    "recall": 0.9661,
+    "tp": 57
+  },
+  "80_yellow_low_6dead_41.jpg": {
+    "fn": 1,
+    "fp": 4,
+    "precision": 0.9518,
+    "recall": 0.9875,
+    "tp": 79
+  }
+}

@@ -42,6 +42,16 @@ def main() -> None:
     p.add_argument("--runs", default="runs")
     p.add_argument("--out", default="results")
 
+    p = sub.add_parser("explain", help="per-frame correct/missed/false boxes and EigenCAM maps")
+    p.add_argument("--weights", required=True, help="trained best.pt")
+    p.add_argument("--data", default="data/ffd")
+    p.add_argument(
+        "--fold", type=int, default=0, help="session-CV fold the weights were trained on"
+    )
+    p.add_argument("--imgsz", type=int, default=960)
+    p.add_argument("--conf", type=float, default=0.35, help="the fold's validation threshold")
+    p.add_argument("--out", default="results/explain")
+
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
     cfg = load_config(args.config)
@@ -75,6 +85,37 @@ def main() -> None:
         log.info("selected %s by validation mAP50-95", chosen)
         (out / "selected_config.txt").write_text(chosen + "\n")
         plots.draw_all(out, chosen)
+    elif args.command == "explain":
+        explain_fold(args, cfg)
+
+
+def explain_fold(args, cfg: dict) -> None:
+    """One frame from each held-out test session of the fold: the model never saw any of them."""
+    from ultralytics import YOLO
+
+    from fishfry import explain
+    from fishfry.io import write_json
+
+    split = grid.split_dir(Path(args.data), "session_cv", args.fold, cfg)
+    model = YOLO(args.weights)
+    names = {int(k): v for k, v in model.names.items()}
+    frames = sorted((split / "images" / "test").glob("*.jpg"))
+    sessions = sorted(
+        {f.name.rsplit("_", 1)[0] for f in frames}, key=lambda s: int(s.split("_")[0])
+    )
+    summary = {}
+    for session in sessions:
+        own = [f for f in frames if f.name.rsplit("_", 1)[0] == session]
+        image = own[len(own) // 2]  # a fixed, middle frame: not hand-picked
+        result = explain.explain(
+            model, image, split / "labels" / "test" / (image.stem + ".txt"), args.imgsz, args.conf
+        )
+        title = f"{image.name} (held-out session, fold {args.fold})"
+        summary[image.name] = explain.render(
+            result, names, title, Path(args.out) / f"{session}.png"
+        )
+        log.info("%s: %s", image.name, summary[image.name])
+    write_json(summary, Path(args.out) / "explain.json")
 
 
 if __name__ == "__main__":
