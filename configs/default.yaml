@@ -1,0 +1,44 @@
+# Everything the experiments depend on. Results are reproducible from this file plus the seed.
+
+seed: 0
+
+data:
+  # Fish Fry Dataset (FFD), Zhai, Xu & Wu, Mendeley Data V1 (2024), CC BY 4.0
+  url: https://data.mendeley.com/public-files/datasets/y52ffd3xdc/files/c4fa1fe3-25de-42ee-b7a8-82af1acd5430/file_downloaded
+  sha256: 1950ebbf5246577921ea577c0981e4f0862be9307145c1ba2d9bbc79b1f79a90
+  expected: {frames: 1101, fish: 51119, dead_fish: 3586, sessions: 16}
+
+splits:
+  # Session-held-out cross-validation. Row = fold, column = density 20/40/60/80, entry =
+  # background-level of the session tested at that density. Every session is tested once,
+  # and every fold tests each density and each background/level combination once.
+  densities: [20, 40, 60, 80]
+  latin_square:
+    - [white-high, white-low, yellow-high, yellow-low]
+    - [white-low, yellow-high, yellow-low, white-high]
+    - [yellow-high, yellow-low, white-high, white-low]
+    - [yellow-low, white-high, white-low, yellow-high]
+  val_sessions_per_fold: 2     # whole sessions, for early stopping and the counting threshold
+
+train:
+  epochs: 100
+  patience: 20
+  workers: 4
+
+# Fixed before any results were seen; the winner is chosen on validation mAP50-95.
+grid:
+  - {name: yolo11n_640, weights: yolo11n.pt, imgsz: 640, batch: 16}
+  - {name: yolo11n_1280, weights: yolo11n.pt, imgsz: 1280, batch: 8}
+  - {name: yolo11s_1280, weights: yolo11s.pt, imgsz: 1280, batch: 8}
+  - {name: yolo12n_1280, weights: yolo12n.pt, imgsz: 1280, batch: 8}
+
+counting:
+  conf_grid: [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
+  iou: 0.6
+  max_det: 300
+
+# Which configurations each protocol runs. The published split is only needed to reproduce the
+# original numbers and measure how much its leak inflates them.
+protocols:
+  published: [yolo11n_640]
+  session_cv: all
