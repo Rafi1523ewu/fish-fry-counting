@@ -1,0 +1,6 @@
+protocol,config,folds,val_map_mean,val_map_std,test_map50_mean,test_map50_std,test_map_mean,test_map_std,test_dead_map_mean,test_dead_map_std,threshold_mean,threshold_std,live_mae_mean,live_mae_std,live_mape_mean,live_mape_std,dead_mae_mean,dead_mae_std,mortality_error_pp_mean,mortality_error_pp_std,alarm_recall_mean,alarm_recall_std,session_live_mae_mean,session_live_mae_std
+published,yolo11n_640,1,0.6764,,0.9673,,0.6953,,0.6532,,0.4,,0.9467,,0.0177,,0.32,,0.611,,0.9956,,0.375,
+session_cv,yolo11n_640,4,0.6722,0.0585,0.9502,0.0084,0.6285,0.0366,0.5782,0.0379,0.375,0.0289,1.235,0.1693,0.0226,0.0021,0.4019,0.0267,0.7004,0.0365,0.9991,0.0017,0.625,0.4787
+session_cv,yolo11n_960,4,0.7151,0.0423,0.9689,0.0038,0.6726,0.0295,0.6348,0.0276,0.375,0.0289,0.8597,0.0676,0.0154,0.0009,0.305,0.062,0.5361,0.101,0.9974,0.0033,0.375,0.1443
+session_cv,yolo11s_640,4,0.7144,0.0514,0.9704,0.0064,0.6793,0.0356,0.6446,0.0342,0.4,0.0408,0.8969,0.1351,0.016,0.002,0.3338,0.05,0.5704,0.0958,0.9974,0.0033,0.3125,0.3146
+session_cv,yolo12n_640,4,0.6751,0.0522,0.9505,0.005,0.6315,0.0341,0.5859,0.0303,0.35,0.0577,1.1909,0.2481,0.0215,0.0032,0.4785,0.0866,0.8154,0.1345,0.9973,0.0035,0.625,0.433

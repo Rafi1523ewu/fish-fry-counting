@@ -59,7 +59,83 @@ The original coursework reported, on the published split:
 | YOLO12n, 640 px, 50 epochs | 0.968 | 0.689 | 0.644 |
 | YOLO11n, 640 px, 50 epochs | 0.965 | 0.681 | 0.632 |
 
-**Results on held-out sessions are pending the GPU run** ([`kaggle/run.ipynb`](kaggle/run.ipynb)).
+Re-run here on the published split, YOLO11n at 640 px reproduces it (test mAP50 0.967,
+mAP50-95 0.695), which confirms this pipeline matches the original.
+
+### How much the leak inflates the scores
+
+Same model and settings (YOLO11n, 640 px), tested on frames from **seen** sessions (published
+split) versus whole **unseen** sessions (session CV, mean ± std over 4 folds):
+
+| | published split | unseen sessions | change |
+|---|---|---|---|
+| mAP50 | 0.967 | 0.950 ± 0.008 | −0.017 |
+| mAP50-95 | 0.695 | 0.629 ± 0.037 | **−0.066** |
+| dead-fry mAP50-95 | 0.653 | 0.578 ± 0.038 | −0.075 |
+| live-count error (fry per frame) | 0.95 | 1.24 ± 0.17 | **+30%** |
+| dead-count error (fry per frame) | 0.32 | 0.40 ± 0.03 | +26% |
+
+![Leak gap](results/figures/leak_gap.png)
+
+mAP50 barely moves, which is why the leak is easy to miss. The stricter mAP50-95 drops by 0.066
+and counting error grows by about a third: the published split rewards a model for having seen
+almost the same frame in training.
+
+### Which model, on unseen sessions
+
+All four configurations under session CV (mean ± std over 4 folds). The model is chosen by
+**validation** mAP50-95; test numbers played no part.
+
+| Config | val mAP50-95 | test mAP50 | test mAP50-95 | live-count error | dead-count error | mortality error (pp) |
+|---|---|---|---|---|---|---|
+| YOLO11n, 640 px | 0.672 | 0.950 | 0.629 ± 0.037 | 1.24 ± 0.17 | 0.40 | 0.70 |
+| **YOLO11n, 960 px** (selected) | **0.715** | 0.969 | 0.673 ± 0.030 | **0.86 ± 0.07** | **0.31** | **0.54** |
+| YOLO11s, 640 px | 0.714 | 0.970 | 0.679 ± 0.036 | 0.90 ± 0.14 | 0.33 | 0.57 |
+| YOLO12n, 640 px | 0.675 | 0.951 | 0.631 ± 0.034 | 1.19 ± 0.25 | 0.48 | 0.82 |
+
+![Configurations](results/figures/configs.png)
+
+Resolution matters more than model size: the nano model at 960 px matches the 3.5× larger
+small model at 640 px, and both beat 640 px nano by about 30% on live-count error. YOLO12n is
+no better than YOLO11n. The validation pick (960 px nano) edges the small model by 0.001
+validation mAP50-95; on test the two are within one standard deviation.
+
+### Counting for a farm (selected model, 1,101 held-out frames)
+
+| Fry in tank | frames | live-count error | exact live count | dead-count error | exact dead count | dead-fry alarm recall |
+|---|---|---|---|---|---|---|
+| 20 | 280 | 0.07 | 93% | 0.02 | 98% | 98.9% |
+| 40 | 266 | 0.51 | 56% | 0.16 | 85% | 100% |
+| 60 | 278 | 1.17 | 31% | 0.45 | 61% | 100% |
+| 80 | 277 | 1.69 | 17% | 0.59 | 51% | 100% |
+| all | 1,101 | 0.86 (1.5%) | 49% | 0.31 | 74% | 99.7% |
+
+- **Live fry**: off by under one fry per frame on average (1.5%), and unbiased (mean signed
+  error within ±0.26 fry at every density). Taking the median over a session's frames, as a
+  farmer reading a short clip would, the count is off by 0.38 fry on average.
+- **Dead fry**: a frame that contains a dead fry is flagged 99.7% of the time, and the estimated
+  mortality rate is within 0.54 percentage points of the truth.
+- **Crowding is the limit**: at 20 fry, 93% of frames are counted exactly; at 80 fry, 17%.
+  Error grows roughly linearly with density, as overlapping fry merge into one detection.
+
+Per-run metrics are in [`results/runs.csv`](results/runs.csv), fold averages in
+[`results/summary.csv`](results/summary.csv), and the per-density table in
+[`results/by_density.json`](results/by_density.json). The full run (17 trainings) took 2.2 hours on
+two Kaggle T4 GPUs.
+
+## What was tried and dropped
+
+The original coursework also started a STAC-style semi-supervised teacher–student model (never
+run) and BYOL self-supervised pre-training of the backbone, whose loss collapsed to a constant
+(−0.9999) and gave 0.017 mAP50. Neither is part of this repository.
+
+## Limitations
+
+- One species, one laboratory set-up and 16 sessions: four test sessions per fold make the fold
+  standard deviations large relative to the differences between the better models.
+- No session has zero dead fry, so the dead-fry false-alarm rate cannot be measured here.
+- The "level" (high / low) in the file names is not documented by the dataset authors; it is
+  used only to balance the folds.
 
 ## Usage
 
@@ -88,6 +164,7 @@ src/fishfry/counting.py  live/dead counts, threshold chosen on validation, farm 
 src/fishfry/grid.py      resumable grid, sharded across GPUs; summary tables
 src/fishfry/plots.py     figures for this README
 kaggle/run.ipynb         the full run on a Kaggle GPU notebook
+results/                 run and fold tables, per-density counting, figures
 tests/                   data, split, counting and grid tests on a synthetic dataset
 ```
 

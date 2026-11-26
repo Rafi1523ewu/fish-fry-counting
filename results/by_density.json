@@ -1,0 +1,7 @@
+{"config": "yolo11n_960", "protocol": "session_cv", "frames": 1101,
+ "exact_live_count_share": 0.494, "exact_dead_count_share": 0.736,
+ "by_density": {
+  "20": {"frames": 280, "live_mae": 0.071, "live_bias": 0.014, "dead_mae": 0.021, "dead_bias": -0.007, "exact_live": 0.932, "exact_dead": 0.979, "alarm_recall": 0.989},
+  "40": {"frames": 266, "live_mae": 0.508, "live_bias": -0.041, "dead_mae": 0.158, "dead_bias": 0.023, "exact_live": 0.564, "exact_dead": 0.85, "alarm_recall": 1.0},
+  "60": {"frames": 278, "live_mae": 1.173, "live_bias": 0.259, "dead_mae": 0.45, "dead_bias": -0.011, "exact_live": 0.313, "exact_dead": 0.612, "alarm_recall": 1.0},
+  "80": {"frames": 277, "live_mae": 1.69, "live_bias": -0.051, "dead_mae": 0.592, "dead_bias": -0.101, "exact_live": 0.166, "exact_dead": 0.505, "alarm_recall": 1.0}}}
