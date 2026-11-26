@@ -42,7 +42,8 @@ tank, not generalisation to a new one.
   Two further whole sessions per fold form the validation set (early stopping and the counting
   threshold); the remaining ten are for training.
 - **Models**, fixed in advance and selected by validation mAP50-95 only: YOLO11n at 640 px (the
-  original setting), YOLO11n at 1280 px (the fry are small), YOLO11s at 1280 px, YOLO12n at 1280 px.
+  original setting), YOLO11n at 960 px (the fry are small), YOLO11s at 640 px and YOLO12n at
+  640 px, each for 50 epochs. The grid is sized to fit one weekly Kaggle GPU quota.
 - **Metrics**: mAP50 and mAP50-95 per class; per-frame live-count and dead-count error;
   mortality-rate error in percentage points; dead-fry alarm recall (frames with a dead fry
   where at least one is found); session-level count error (median over a session's frames); all

@@ -21,16 +21,17 @@ splits:
   val_sessions_per_fold: 2     # whole sessions, for early stopping and the counting threshold
 
 train:
-  epochs: 100
-  patience: 20
+  epochs: 50                   # as in the original runs
+  patience: 15
   workers: 4
 
 # Fixed before any results were seen; the winner is chosen on validation mAP50-95.
+# Sized to fit one weekly Kaggle GPU quota (17 runs in about 3.5 hours on 2 x T4).
 grid:
   - {name: yolo11n_640, weights: yolo11n.pt, imgsz: 640, batch: 16}
-  - {name: yolo11n_1280, weights: yolo11n.pt, imgsz: 1280, batch: 8}
-  - {name: yolo11s_1280, weights: yolo11s.pt, imgsz: 1280, batch: 8}
-  - {name: yolo12n_1280, weights: yolo12n.pt, imgsz: 1280, batch: 8}
+  - {name: yolo11n_960, weights: yolo11n.pt, imgsz: 960, batch: 16}
+  - {name: yolo11s_640, weights: yolo11s.pt, imgsz: 640, batch: 16}
+  - {name: yolo12n_640, weights: yolo12n.pt, imgsz: 640, batch: 16}
 
 counting:
   conf_grid: [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
